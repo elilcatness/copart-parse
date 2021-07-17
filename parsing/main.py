@@ -25,6 +25,8 @@ def search(update: Update, context):
     edit_thread.stop()
     update.message.reply_text(f'Найдено {len(output)} автомобилей.\n'
                               f'Время поиска: {time.time() - start_time:.2f} секунд')
+    for car in output:
+        update.message.reply_text(car['ld'])
 
 
 def start(update, _):
