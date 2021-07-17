@@ -1,7 +1,6 @@
 import os
 import time
 
-from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Updater, CommandHandler
 
@@ -44,5 +43,4 @@ def main():
 
 
 if __name__ == '__main__':
-    load_dotenv()
     main()
