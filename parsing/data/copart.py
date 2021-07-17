@@ -32,18 +32,20 @@ class Copart:
             return None
         size = 100
         total = int(first_response.json()['data']['results']['totalElements'])
+        print('total: %d' % total)
         pages = int(total / size) + 1 if total / size > int(total / size) else int(total / size)
         params['size'] = size
         tasks = [{'from': p, 'to': p + self.pages_per_process
-        if p + self.pages_per_process <= pages else p + (pages - p) + 1,
+                 if p + self.pages_per_process <= pages else p + (pages - p) + 1,
                   'params': params}
                  for p in range(0, int(pages / self.pages_per_process) + 1
-            if pages / self.pages_per_process > int(pages)
-            else total // size, self.pages_per_process)]
+                 if pages / self.pages_per_process > int(pages)
+                 else total // size, self.pages_per_process)]
         pool = Pool(processes=len(tasks))
         pool.map(self.parse_pages, tasks)
         if filters:
             self.output = [car for car in self.output
                            if (filters['year_from'] <= car['lcy'] <= filters['year_to']) and
                            (filters['price_from'] <= car['bnp'] <= filters['price_to'])]
+        print('output: %d' % len(self.output))
         return sorted(self.output, key=lambda car: car['page'])
