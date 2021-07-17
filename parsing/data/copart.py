@@ -1,9 +1,7 @@
 import json
-import logging
 import os
-import sys
-import time
 from multiprocessing.dummy import Pool
+
 
 import requests
 
@@ -26,19 +24,15 @@ class Copart:
                 continue
             cars = [{'page': p, **car} for car in response.json()['data']['results']['content']]
             self.output.extend(cars)
-            print({'page': p, **params})
 
-    def get_data(self):
+    def get_data(self, filters=None):
         params = {'filter[FETI]': 'buy_it_now_code:B1', 'size': 1}
         first_response = requests.post(self.url, params=params, headers=self.headers)
         if not first_response:
-            print('You fucked up, you idiot!')
-            sys.exit(-1)
+            return None
         size = 100
         total = int(first_response.json()['data']['results']['totalElements'])
-        print(f'total: {total}')
         pages = int(total / size) + 1 if total / size > int(total / size) else int(total / size)
-        print(f'pages: {pages}')
         params['size'] = size
         tasks = [{'from': p, 'to': p + self.pages_per_process
         if p + self.pages_per_process <= pages else p + (pages - p) + 1,
@@ -47,7 +41,9 @@ class Copart:
             if pages / self.pages_per_process > int(pages)
             else total // size, self.pages_per_process)]
         pool = Pool(processes=len(tasks))
-        print('Started')
         pool.map(self.parse_pages, tasks)
-        print('Finished')
+        if filters:
+            self.output = [car for car in self.output
+                           if (filters['year_from'] <= car['lcy'] <= filters['year_to']) and
+                           (filters['price_from'] <= car['bnp'] <= filters['price_to'])]
         return sorted(self.output, key=lambda car: car['page'])
